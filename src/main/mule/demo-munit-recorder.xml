@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="fe03a628-b496-44f7-a397-5251bf2e7e96" >
+		<db:my-sql-connection host="congo.c3w6upfzlwwe.us-west-1.rds.amazonaws.com" port="3306" user="mulesoft" password="mulesoft" database="congo" />
+	</db:config>
+	<wsc:config name="Delta_Web_Service_Consumer_Config" doc:name="Web Service Consumer Config" doc:id="07935921-8a36-4d3d-a4e3-156b0659b1d8" >
+		<wsc:connection wsdlLocation="http://mu.learn.mulesoft.com/delta?wsdl" service="TicketServiceService" port="TicketServicePort" address="http://mu.learn.mulesoft.com/delta">
+			<reconnection >
+				<reconnect />
+			</reconnection>
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>	
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="360ede4f-1e53-4bbb-8e79-8525efaac471" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="mysql-account" doc:id="e16b250f-7515-4c97-82d9-6f2285834bcd" >
+		<db:select doc:id="253cdea4-0158-465c-990a-0a47f7068580" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * from contacts]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="13ad311c-3745-474a-914e-1cfce28560a5">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="WS-Delta-flight" doc:id="2ec6363e-a3e4-41fb-b9fc-5103254ce932" >
+		<wsc:consume doc:id="b79feb98-478f-49d1-b07d-0ae498c01aa2" config-ref="Delta_Web_Service_Consumer_Config" operation="findFlight">
+			<wsc:message >
+				<wsc:body ><![CDATA[#[output application/xml
+ns ns0 http://soap.training.mulesoft.com/
+---
+{
+	ns0#findFlight: {
+		destination: 'SFO'
+	}
+}]]]></wsc:body>
+			</wsc:message>
+		</wsc:consume>
+		<ee:transform doc:name="Transform Message" doc:id="c3a420e2-61d3-476c-a6f3-c9d62c3ebd7a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.body..*return map {
+	airline: $.airlineName,
+	code: $.code,
+	travelDate: $.departureDate,
+	destination: $.destination,
+	price: $.price as Number,
+	'type': $.planeType
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="demo-munit-recorderFlow" doc:id="32011a66-6296-4bd6-a65a-82a9c29ee9f9" >
+		<http:listener doc:name="Listener" doc:id="ea9dedde-e012-4124-a093-b9aa8c97d704" config-ref="HTTP_Listener_config" path="/test1"/>
+		<validation:is-not-blank-string doc:name="Is not blank string" doc:id="f6da471b-0c04-4053-af95-eb00f9c6569b" value="#[attributes.queryParams.system]" message='#["System value is not sent in query params"]'/>
+		<set-variable value="#[attributes.queryParams.system]" doc:name="Set Variable" doc:id="d15d19aa-20c9-47e1-bab1-b0b3824f1993" variableName="targetSystem"/>
+		<choice doc:name="Choice" doc:id="cf5b07bc-b9aa-4f47-b883-08750662c59d" >
+			<when expression="#[vars.targetSystem == 'db']">
+				<flow-ref doc:name="mysql-account" doc:id="26edaa53-c5b8-4dab-bf7b-ed3c00b02cf4" name="mysql-account" />
+			</when>
+			<when expression="#[vars.targetSystem == 'WS']">
+				<flow-ref doc:name="WS-Delta-flight" doc:id="063a5454-c8a2-45e8-90ed-6948bf71a42c" name="WS-Delta-flight"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="91d4f23f-efbe-44a4-b1ed-598efdd146c0" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: 'Not a valid target system'
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler >
+
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="54faae97-aa08-47d9-9c7f-4f22b68de2e7" type="VALIDATION:BLANK_STRING">
+				<set-payload value="#[output application/json --- {'message': &quot;Query string cannot be blank&quot;}]" doc:name="Set Payload" doc:id="4ad27f36-5318-47ee-816c-30ac41e5e050" />
+			</on-error-continue>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="3634bdb7-c5f2-4ad6-8ecf-82daf919bdaa" >
+				<logger level="INFO" doc:name="Logger" doc:id="2dda8a55-5e51-4446-b4c4-33900fe67541" message="#[payload]"/>
+			</on-error-propagate>			
+		</error-handler>
+	</flow>
+</mule>

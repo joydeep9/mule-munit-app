@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="demo-munit-recorder-suite.xml" />
+	<munit:test name="demo-munit-recorderFlow-test" doc:id="0a4ac47a-268a-4e3c-a1e0-3750ab92512a" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="94cdbe7c-6e10-4dda-817b-fad6f3590555" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://demomunitrecorderFlowtest\set-event_payload1.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://demomunitrecorderFlowtest\set-event_attributes1.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to demo-munit-recorderFlow" doc:id="7fddfe64-bd5c-45b5-ab74-3c4a37eaddc4" name="demo-munit-recorderFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="7284ac39-5c2e-4ed2-80d2-5131b9a78193" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import demomunitrecorderFlowtest::assert_expression_payload1
+---
+assert_expression_payload1::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="demo-munit-recorderFlow-test1" doc:id="98f8a970-370d-421a-9df1-47d9409ffb5a" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="e48e35b9-aa6f-4030-86aa-d3b93a91ab68" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://demomunitrecorderFlowtest1\set-event_payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://demomunitrecorderFlowtest1\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to demo-munit-recorderFlow" doc:id="d14fac87-c010-4617-ad6d-a474d33fad23" name="demo-munit-recorderFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="05f9361e-28b3-45be-852b-7822145b3d72" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import demomunitrecorderFlowtest1::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify WS-Delta-flight" doc:id="a47d1cf7-489f-4414-8982-8bcb380e7c2f" processor="flow-ref" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="063a5454-c8a2-45e8-90ed-6948bf71a42c" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="demo-munit-recorderFlow-test2" doc:id="98553f88-30d8-4f8a-aab0-e3d066f4da06" >
+		<munit:behavior >
+			<munit:set-event doc:name="Set Input" doc:id="b13fed60-5477-44dc-b4af-02a738d49dd7" >
+				<munit:payload value="#[output application/json --- readUrl('classpath://demomunitrecorderFlowtest2\set-event_payload.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://demomunitrecorderFlowtest2\set-event_attributes.dwl')]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to demo-munit-recorderFlow" doc:id="8911816e-a2ee-439c-b5a2-3b9b5423d581" name="demo-munit-recorderFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="70a9938f-abeb-4198-8b6f-8d7964011663" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import demomunitrecorderFlowtest2::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+		</munit:validation>
+	</munit:test>
+
+	<munit:test name="demo-munit-recorder-test-suite-error-scenario-validation" doc:id="d50f4288-a6f9-4c75-b231-bf0a448a615d" description="Test">
+		<munit:behavior >
+			<munit:set-event doc:name="Set Event" doc:id="4cb82f6e-26dd-4534-ba3c-cbd5078084e1" >
+				<munit:attributes value="#[
+	queryParams: {
+		system: ''
+	}
+]" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to demo-munit-recorderFlow" doc:id="59d0c740-5161-40bd-9c52-582eaa8b6a5e" name="demo-munit-recorderFlow"/>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:assert-that doc:name="Assert that" doc:id="53591601-9464-43ea-8569-ad54a3dcc6a5" expression="#[payload.message]" is='#[MunitTools::equalTo("Query string cannot be blank")]'/>
+
+		</munit:validation>
+	
+</munit:test>
+	<munit:test name="demo-munit-recorder-suiteTest" doc:id="d27e6681-6695-4f04-8009-a73841b41dd4" >
+		<munit:behavior>
+			<munit-tools:mock-when doc:name="Mock when" doc:id="a7a25d6a-cbfe-42d0-8597-4ade1e91020c" processor="db:select">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="253cdea4-0158-465c-990a-0a47f7068580" attributeName="doc:id" />
+					<munit-tools:with-attribute whereValue="Database_Config" attributeName="config-ref" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:error typeId="DB:CONNECTIVITY" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		</munit:behavior>
+		<munit:execution>
+			<munit:set-event doc:name="Copy_of_Set Input" doc:id="382f7057-4e8d-4fa3-b6e8-971f5f7e2682">
+				<munit:payload value="#[output application/json --- readUrl('classpath://demomunitrecorderFlowtest\set-event_payload1.dwl')]" encoding="UTF-8" mediaType="application/json" />
+				<munit:attributes value="#[readUrl('classpath://demomunitrecorderFlowtest\set-event_attributes1.dwl')]" />
+			</munit:set-event>
+			<try doc:name="Try" doc:id="4c6e0a46-1fb5-4b50-a758-c81757cd2224" >
+				<flow-ref doc:name="demo-munit-recorderFlow" doc:id="19c80144-f9e1-4443-ad94-ea6cff6038e3" name="demo-munit-recorderFlow" />
+				<error-handler >
+					<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="54729165-e1a1-4828-9676-e6bf7aae4b68" type="DB:CONNECTIVITY"/>
+				</error-handler>
+			</try>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:verify-call doc:name="Verify call" doc:id="191e42f8-456e-4fc4-9f56-f3c10c5ed09b" processor="logger">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="2dda8a55-5e51-4446-b4c4-33900fe67541" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+</mule>
