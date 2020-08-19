@@ -65,7 +65,7 @@ payload.body..*return map {
 		</ee:transform>
 	</flow>
 	<flow name="demo-munit-recorderFlow" doc:id="32011a66-6296-4bd6-a65a-82a9c29ee9f9" >
-		<http:listener doc:name="Listener" doc:id="ea9dedde-e012-4124-a093-b9aa8c97d704" config-ref="HTTP_Listener_config" path="/test1"/>
+		<http:listener doc:name="GET /test1" doc:id="ea9dedde-e012-4124-a093-b9aa8c97d704" config-ref="HTTP_Listener_config" path="/test1"/>
 		<validation:is-not-blank-string doc:name="Is not blank string" doc:id="f6da471b-0c04-4053-af95-eb00f9c6569b" value="#[attributes.queryParams.system]" message='#["System value is not sent in query params"]'/>
 		<set-variable value="#[attributes.queryParams.system]" doc:name="Set Variable" doc:id="d15d19aa-20c9-47e1-bab1-b0b3824f1993" variableName="targetSystem"/>
 		<choice doc:name="Choice" doc:id="cf5b07bc-b9aa-4f47-b883-08750662c59d" >
